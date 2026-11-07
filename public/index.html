@@ -1050,6 +1050,9 @@ if(!UID){
 }
 
 // ---------- AUDIO ----------
+let longOsc=[];
+// Cut off long ride sounds (rocket rumble, tow hum) when the player skips ahead.
+function stopRideSounds(){longOsc.forEach(o=>{try{o.stop();}catch(e){}});longOsc=[];}
 let actx=null, muted = !!store.get("pricely-muted");
 function tone(f,d=0.08,type="square",when=0,vol=0.06){
   if(muted) return;
@@ -1059,6 +1062,7 @@ function tone(f,d=0.08,type="square",when=0,vol=0.06){
     o.type=type; o.frequency.setValueAtTime(f,t);
     g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(0.0001,t+d);
     o.connect(g).connect(actx.destination); o.start(t); o.stop(t+d+0.02);
+    if(d>1) longOsc.push(o);
   }catch(e){}
 }
 const sfx = {
@@ -1823,6 +1827,7 @@ function startAisle(){
   sceneMode="aisle";pa(null);pose="walk";
   if(travelTO){clearTimeout(travelTO);travelTO=null;camX=pendingStart+AISLE*pendingDist;}
   if(travel){camX=travel.start+AISLE*travel.dist;travel=null;shopX=BASEX;}
+  rocketSprout=0;warpAmt=0;shake=0;stopRideSounds();
   $("iName").textContent=it.n.toUpperCase();
   $("iYear").textContent=it.y;
   $("iNote").textContent=it.note;
