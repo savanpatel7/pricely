@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS scores (
+  day TEXT NOT NULL,
+  uid TEXT NOT NULL,
+  score INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (day, uid)
+);
