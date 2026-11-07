@@ -2,6 +2,7 @@
   "name": "pricely",
   "main": "src/worker.js",
   "compatibility_date": "2026-11-01",
+  "workers_dev": true,
   "assets": { "directory": "./public", "binding": "ASSETS" },
   "d1_databases": [
     { "binding": "DB", "database_name": "pricely-scores", "database_id": "8c843a75-c9c2-48de-9e00-952a5c05e897" }
