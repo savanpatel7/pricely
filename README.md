@@ -1,12 +1,10 @@
 # Pricely
 
-Daily 8-bit price guessing game. Static page plus one Cloudflare Pages Function for scores.
+Daily 8-bit price guessing game, deployed as a Cloudflare Worker with static assets.
 
-- `index.html` - the whole game
-- `functions/api/score.js` - saves one score per player per day, returns that day's scores
+- `public/index.html` - the whole game
+- `src/worker.js` - score API at /api/score (one score per player per day), everything else served from public/
 - `schema.sql` - the D1 table
+- `wrangler.jsonc` - Worker config; `database_id` must be the real D1 id of `pricely-scores`
 
-## Cloudflare setup
-1. Workers & Pages > Create > Pages > Connect to Git > pick this repo. Build command: none. Output directory: `/`.
-2. Storage & Databases > D1 > Create database named `pricely-scores`. Open its Console and run the contents of `schema.sql`.
-3. Pages project > Settings > Bindings > Add > D1 database. Variable name `DB`, database `pricely-scores`. Then redeploy.
+Deploy command: `npx wrangler deploy`

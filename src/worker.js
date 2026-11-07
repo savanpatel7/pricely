@@ -1,4 +1,5 @@
-// Pricely score API (Cloudflare Pages Function, D1 database bound as DB).
+// Pricely Worker: serves the game from public/ and the score API at /api/score.
+// D1 database bound as DB.
 // POST {day:"dYYYYMMDD", uid, score} saves one score per player per day
 // and returns every score for that day so the game can draw the real curve.
 // GET ?day=dYYYYMMDD returns the scores without saving.
@@ -27,7 +28,7 @@ async function scoresFor(db, day) {
   return results.map((r) => r.score);
 }
 
-export async function onRequestPost({ request, env }) {
+async function handlePost(request, env) {
   let body;
   try { body = await request.json(); } catch { return json({ error: "bad json" }, 400); }
   const { day, uid, score } = body || {};
@@ -42,8 +43,24 @@ export async function onRequestPost({ request, env }) {
   return json({ scores: await scoresFor(env.DB, day) });
 }
 
-export async function onRequestGet({ request, env }) {
+async function handleGet(request, env) {
   const day = new URL(request.url).searchParams.get("day");
   if (!day || !/^d\d{8}$/.test(day)) return json({ error: "bad day" }, 400);
   return json({ scores: await scoresFor(env.DB, day) });
 }
+
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    if (url.pathname === "/api/score") {
+      try {
+        if (request.method === "POST") return await handlePost(request, env);
+        if (request.method === "GET") return await handleGet(request, env);
+        return json({ error: "method not allowed" }, 405);
+      } catch (e) {
+        return json({ error: "server error" }, 500);
+      }
+    }
+    return env.ASSETS.fetch(request);
+  },
+};
