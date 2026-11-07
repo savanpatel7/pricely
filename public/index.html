@@ -1355,7 +1355,10 @@ function drawCheckoutWall(now,band,xC){
     R(ck,band+6,13,13,OUT);R(ck+1,band+5,11,15,OUT);R(ck+1,band+7,11,11,"#fffdf7");R(ck+2,band+6,9,13,"#fffdf7");
     R(ck+6,band+8,1,5,OUT);R(ck+6,band+12,4,1,OUT);
     for(const [tx,ty] of [[6,7],[10,12],[6,17],[2,12]]) R(ck+tx,band+ty,1,1,"#9a8f78");
-    const sa=now*0.001*Math.PI/30*5; R(ck+6+Math.round(Math.sin(sa)*4),band+12-Math.round(Math.cos(sa)*4),1,1,"#e04848");
+    // red second hand: a 1px line from the center out to the rim, sweeping around
+    const sa=now*0.001*Math.PI/30*5, hx=Math.sin(sa), hy=-Math.cos(sa);
+    for(let i=0;i<=4;i++) R(ck+6+Math.round(hx*i),band+12+Math.round(hy*i),1,1,"#e04848");
+    R(ck+6,band+12,1,1,OUT);
   }
   // bulletin board
   const bb=78;
