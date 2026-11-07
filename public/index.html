@@ -1028,6 +1028,9 @@ const store = {
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 };
 const SAVE_KEY = "pricely-"+dateKey;
+// Progress through today's daily run. An item that was shown but not answered
+// (tab closed or refreshed) counts as out of time, so the daily can't be replayed.
+const PROG_KEY = "pricely-prog-"+dateKey;
 
 // ---------- SHARED STATS (api) ----------
 // Anonymous player id, kept in this browser so one person counts once per day.
@@ -1783,16 +1786,31 @@ function startGame(isPractice){
   practice=isPractice;
   items=pickItems(isPractice?Math.floor(Math.random()*1e9):dayNum*7919+17);
   round=0;results=[];cart=[];flyer=null;parts=[];streak=0;setStreak();
+  if(!isPractice){
+    const prog=store.get(PROG_KEY);
+    if(prog&&Array.isArray(prog.results)){
+      results=prog.results.slice(0,ROUNDS);
+      if(prog.open&&results.length<ROUNDS){
+        const it=items[results.length],r=score(null,it.p);
+        results.push({n:it.n,y:it.y,p:it.p,g:null,pts:r.pts,label:r.label,e:r.e,c:r.c,ride:r.ride,err:r.err,s:it.s});
+      }
+      round=results.length;
+      store.set(PROG_KEY,{results,open:false});
+    }
+  }
   worldSeed=practice?Math.floor(Math.random()*1e6):dayNum; chunkCache={};
   camX=0;travel=null;pose="walk";sceneMode="aisle";
   shopX=-60;shopTarget=BASEX;
   $("hudNum").textContent=practice?"PRACTICE":"#"+dayNum;
   $("hudScore").textContent="0";
   $("dots").classList.remove("hidden");
+  $("hudScore").textContent=String(total());
+  if(round>=ROUNDS){checkout(false);return;}
   startAisle();
 }
 function startAisle(){
   const it=items[round];
+  if(!practice) store.set(PROG_KEY,{results,open:true});
   sceneMode="aisle";pa(null);pose="walk";
   if(travelTO){clearTimeout(travelTO);travelTO=null;camX=pendingStart+AISLE*pendingDist;}
   if(travel){camX=travel.start+AISLE*travel.dist;travel=null;shopX=BASEX;}
@@ -1820,6 +1838,7 @@ function submit(guess){
   timerOn=false;
   const it=items[round],r=score(guess,it.p),before=total();
   results.push({n:it.n,y:it.y,p:it.p,g:guess,pts:r.pts,label:r.label,e:r.e,c:r.c,ride:r.ride,err:r.err,s:it.s});
+  if(!practice) store.set(PROG_KEY,{results,open:false});
   const good=r.pts>=46;
   streak=r.pts>=82?streak+1:0;setStreak();
   flyer=null;
@@ -2002,6 +2021,7 @@ $("tierList").innerHTML=TIERS.concat([TIMEOUT]).map(t=>`<div>${t.e}</div><div>${
 $("hudNum").textContent="#"+dayNum;
 const saved=store.get(SAVE_KEY);
 if(saved&&saved.results&&saved.results.length===ROUNDS){$("startBtn").classList.add("hidden");$("receiptBtn").classList.remove("hidden");}
+else{const prog=store.get(PROG_KEY);if(prog&&Array.isArray(prog.results))$("startBtn").textContent="RESUME TODAY'S TRIP ▸";}
 $("startBtn").onclick=()=>{sfx.blip();startGame(false);};
 $("receiptBtn").onclick=()=>{sfx.blip();results=saved.results;practice=false;cart=results.filter(r=>r.pts>=46).map(r=>({s:r.s||"console"}));$("dots").classList.remove("hidden");checkout(true);};
 $("practiceBtn").onclick=()=>{sfx.blip();window.scrollTo(0,0);startGame(true);};
